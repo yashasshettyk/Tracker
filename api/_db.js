@@ -35,18 +35,18 @@ export async function migrate() {
   if (!ready) {
     ready = db()
       .query(`
-        CREATE TABLE IF NOT EXISTS users (
+        CREATE TABLE IF NOT EXISTS ledger_users (
           id          TEXT PRIMARY KEY,
           username    TEXT UNIQUE NOT NULL,
           pw_hash     TEXT NOT NULL,
           created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
         );
-        CREATE TABLE IF NOT EXISTS ledgers (
-          user_id     TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        CREATE TABLE IF NOT EXISTS ledger_docs (
+          user_id     TEXT PRIMARY KEY REFERENCES ledger_users(id) ON DELETE CASCADE,
           doc         JSONB NOT NULL DEFAULT '{}'::jsonb,
           updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
         );
-        CREATE INDEX IF NOT EXISTS users_username_lower ON users (lower(username));
+        CREATE INDEX IF NOT EXISTS ledger_users_username_lower ON ledger_users (lower(username));
       `)
       .catch((e) => {
         ready = null

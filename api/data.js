@@ -10,7 +10,7 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      const { rows } = await query('SELECT doc, updated_at FROM ledgers WHERE user_id = $1', [userId])
+      const { rows } = await query('SELECT doc, updated_at FROM ledger_docs WHERE user_id = $1', [userId])
       return json(res, 200, { doc: rows[0]?.doc || null, updatedAt: rows[0]?.updated_at || null })
     }
 
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
         return json(res, 400, { error: 'BAD_DOC' })
       }
       const { rows } = await query(
-        `INSERT INTO ledgers (user_id, doc, updated_at) VALUES ($1, $2, now())
+        `INSERT INTO ledger_docs (user_id, doc, updated_at) VALUES ($1, $2, now())
          ON CONFLICT (user_id) DO UPDATE SET doc = EXCLUDED.doc, updated_at = now()
          RETURNING updated_at`,
         [userId, JSON.stringify(body.doc)]
