@@ -55,7 +55,10 @@ function Form({ entry, initialKind }) {
           tone={edu ? 'edu' : 'casual'}
           value={kind}
           onChange={(k) => { setKind(k); setCategoryId('') }}
-          items={[{ k: 'education', label: '🎓 Education' }, { k: 'casual', label: '🤝 Casual' }]}
+          items={[
+            { k: 'education', label: <><Icon name="edu" size={16} weight="duotone" /> Education</> },
+            { k: 'casual', label: <><Icon name="casual" size={16} weight="duotone" /> Casual</> },
+          ]}
         />
       )}
 

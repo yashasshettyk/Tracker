@@ -519,13 +519,15 @@ input[type='date']::-webkit-calendar-picker-indicator { filter: invert(1); opaci
 @keyframes fadeOut { to { opacity: 0; } }
 
 .sheet {
-  position: fixed; left: 50%; bottom: 0; z-index: 61;
+  position: fixed; left: 50%; z-index: 61;
+  /* ride above the software keyboard rather than hiding behind it */
+  bottom: var(--vv-bottom, 0px);
   width: min(540px, 100%); transform: translateX(-50%);
   background: linear-gradient(180deg, #17171a 0%, #0b0b0d 44%);
   border-radius: 27px 27px 0 0;
   padding: 8px var(--pad) calc(var(--sab) + 18px);
   box-shadow: var(--sh-2);
-  max-height: min(90dvh, 780px); overflow-y: auto;
+  max-height: min(88dvh, var(--vv-height, 100dvh), 780px); overflow-y: auto;
   -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
   animation: sheetIn 0.44s var(--spring) both;
 }
@@ -672,6 +674,21 @@ input[type='date']::-webkit-calendar-picker-indicator { filter: invert(1); opaci
 @keyframes shake { 10%, 90% { transform: translateX(-2px); } 30%, 70% { transform: translateX(3px); } 50% { transform: translateX(-3px); } }
 .pw-wrap { position: relative; }
 .pw-toggle { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; display: grid; place-items: center; color: var(--t-3); border-radius: 11px; }
+
+
+/* ---------------------------------------------------------------------
+   iOS Safari and Samsung Internet do not clip transformed or blended
+   children to a border-radius with overflow:hidden alone — corners come
+   out square. A full-coverage webkit mask forces the clip.
+   --------------------------------------------------------------------- */
+.card, .hero, .list-card, .sheet, .nav, .cat-avatar, .txn-icon, .seg, .glyph-cell, .tone-cell, .hero-chip {
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  mask-image: radial-gradient(white, black);
+}
+/* art layers inherit the corner so nothing paints past it */
+.hero [data-parallax],
+.hero::after,
+.hero::before { border-radius: inherit; }
 
 /* ============================================================ RESPONSIVE */
 /* iPhone 13 mini / older small Androids */

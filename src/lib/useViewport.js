@@ -23,7 +23,12 @@ export function useViewport() {
         setState((s) =>
           s.keyboard === keyboard && Math.abs(s.inset - hidden) < 2 ? s : { keyboard, inset: keyboard ? 0 : hidden }
         )
-        document.documentElement.style.setProperty('--vv-inset', `${keyboard ? 0 : Math.round(hidden)}px`)
+        const root = document.documentElement
+        // chrome-only inset: what a bottom-docked bar should clear
+        root.style.setProperty('--vv-inset', `${keyboard ? 0 : Math.round(hidden)}px`)
+        // everything hidden, keyboard included: what a sheet must sit above
+        root.style.setProperty('--vv-bottom', `${Math.round(hidden)}px`)
+        root.style.setProperty('--vv-height', `${Math.round(vv.height)}px`)
       })
     }
 
