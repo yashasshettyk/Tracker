@@ -1,71 +1,96 @@
 # Ledger — Brother Tracker
 
-A mobile-first, offline personal ledger for tracking money you give your brother, split into
-two sections: **Education** (a gift — nothing comes back) and **Casual** (a loan — he returns it).
+A mobile-first ledger for money you give your brother, split into **Education**
+(a gift — nothing comes back) and **Casual** (a loan he returns). Accounts sync
+across devices, so signing in on a new phone loads the same ledger.
 
-## Run it
+**Live:** https://bhailedger.vercel.app
+
+## Run locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open the printed **Network** URL on your phone (same Wi-Fi) to use it as a phone app.
-On iOS/Android use *Add to Home Screen* — it opens full-screen with safe-area padding.
+With no backend reachable, the app falls back to **local mode**: one account in
+this browser, data in `localStorage`. To run the API and database locally:
 
 ```bash
-npm run build && npm run preview   # production build
+npx vercel dev      # serves /api and injects POSTGRES_URL + AUTH_SECRET
 ```
 
-## First run
+## How sync works
 
-You set your own **username + password**, then who you are tracking and your currency.
-The lock is a plain front-end gate (a hashed check in `localStorage`) — it keeps the app
-closed to a casual glance, it is not encryption. Everything is stored in this browser only.
+- `POST /api/auth` — `signup` / `login` / `logout` / `password`
+- `GET|PUT /api/data` — read and write the signed-in user's ledger
+
+Passwords are hashed with **scrypt** (random per-user salt, timing-safe compare).
+Sessions are an HMAC-signed, `HttpOnly`, `SameSite=Lax` cookie — no session table.
+`/api/data` refuses anything without a valid session, so the ledger is not
+readable just by knowing the URL.
+
+The whole ledger travels as one JSON document — it is small and always read
+together. Writes are optimistic: local state updates immediately, then a
+debounced `PUT` follows, with a per-account `localStorage` cache so the app opens
+instantly and keeps working offline.
+
+Tables are namespaced (`ledger_users`, `ledger_docs`) because the Neon instance
+is shared with another project.
+
+## Environment
+
+| Variable | Set by |
+|---|---|
+| `POSTGRES_URL` | added automatically when the Postgres/Neon store is attached |
+| `AUTH_SECRET` | random string; signs session cookies |
+
+Generate a secret with:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+```
+
+The schema is created on first request, so a fresh database needs no migration step.
 
 ## What it does
 
-**Two sections**
-- **Education** — fees, books, hostel, laptop, travel… counted as given, never owed.
-- **Casual** — money he has to return. Each loan tracks part payments and shows
-  *Due / Part paid / Settled*.
+**Education** — fees, books, hostel, laptop, travel. Counted as given, never owed.
 
-**Categories** — 24 built-ins across both sections, with a searchable picker. Type a name
-that does not exist (e.g. *"Engineering Workshop Fee"*), pick an icon, and it is created and
-selected in one step. Categories in use cannot be deleted, so entries are never orphaned.
+**Casual** — money he returns. Each loan tracks part payments and shows
+*Due / Part paid / Settled*. Record a repayment against one loan, or let
+*Oldest loans first* split an amount across open loans (it previews the split
+before saving).
 
-**Repayments** — record what he pays back against one specific loan, or let
-*Oldest loans first* split the amount automatically across open loans (it previews the split
-before you save). "Settle all" clears everything at once.
+**Categories** — 24 built-ins with a searchable picker. Type a name that does not
+exist, pick an icon and colour, and it is created and selected in one step.
+Categories in use cannot be deleted, so entries are never orphaned.
 
-**Stats** — animated bar chart (6M / 12M / yearly, filterable by section), outstanding-balance
-and cumulative-given trend lines, a category donut, insight tiles (monthly average, biggest
-month, largest single entry, average per entry) and a year-by-year summary.
+**Stats** — animated bar chart (6M / 12M / yearly, filterable by section),
+outstanding-balance and cumulative-given trend lines, a category donut, insight
+tiles and a year-by-year summary.
 
-**Data** — Settings → *Backup* downloads a JSON file, *Restore* reads one back.
+## Design
+
+Near-black ground, brushed-metal cards carrying guilloché engraving, an EMV chip
+and a holographic sheen, with scroll parallax and pointer tilt. Icons are
+Phosphor throughout — no emoji, so One UI and iOS render identically. Charts are
+hand-rolled SVG. Tuned for 390px (iPhone 13) and 412px (Galaxy A17); the bottom
+dock tracks the *visual* viewport so the software keyboard never covers it.
 
 ## Layout
 
 ```
+api/
+  _db.js         pool, schema migration
+  _auth.js       scrypt hashing, signed session cookies
+  auth.js        signup / login / logout / password
+  data.js        read + write the ledger document
 src/
-  main.jsx, App.jsx          shell, tab nav, sheets, toasts
-  store.jsx                  state + every action, persisted to localStorage
-  lib/
-    format.js                money/date formatting (₹ and 6 other currencies)
-    storage.js               persistence, seed categories, password hash
-    stats.js                 totals, monthly/yearly series, trends, FIFO allocation
-    useAnim.js               rAF progress driver for charts
-  components/
-    Login.jsx                first-run setup + sign in
-    Dashboard.jsx            overview
-    SectionView.jsx          education / casual lists, search + filters
-    StatsView.jsx            charts and insights
-    Settings.jsx             profile, password, backup/restore
-    EntrySheet.jsx           add / edit an entry
-    RepaySheet.jsx           record money returned
-    CategoryPicker.jsx       searchable dropdown + create-new
-    charts/                  BarChart, AreaChart, DonutChart (hand-rolled SVG)
-  styles/global.css          design tokens and every component style
+  store.jsx      state, actions, cloud sync, offline cache
+  lib/           formatting, stats, cloud client, motion + viewport hooks
+  components/    views, sheets, card art, charts
+  styles/        design tokens
 ```
 
-No UI or chart libraries — React only, ~68 kB gzipped.
+No UI or chart libraries beyond the icon set.
