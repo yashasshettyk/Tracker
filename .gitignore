@@ -1,3 +1,9 @@
 node_modules
 dist
 .DS_Store
+
+# never commit secrets or local Vercel linkage
+.env
+.env.*
+!.env.example
+.vercel
