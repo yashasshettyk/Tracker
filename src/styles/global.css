@@ -56,6 +56,7 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 html {
+  height: 100%;
   background: var(--bg);
   -webkit-text-size-adjust: 100%;  /* Samsung Internet / Chrome font boosting */
   text-size-adjust: 100%;
@@ -63,7 +64,8 @@ html {
 
 body {
   margin: 0;
-  min-height: 100%;
+  height: 100%;
+  overflow: hidden;
   background: var(--bg);
   color: var(--t-1);
   font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -101,10 +103,28 @@ button { cursor: pointer; border: none; background: none; padding: 0; }
 }
 
 /* ============================================================ SHELL */
-.app {
+/*
+ * `position: fixed; bottom: 0` anchors to the LAYOUT viewport, which on a phone
+ * runs underneath the browser toolbar and the gesture bar — that is what pushed
+ * the dock off screen. Instead the shell is exactly one dynamic viewport tall,
+ * scrolling happens inside .scroll, and the dock is a normal flex child that
+ * physically cannot leave the visible area.
+ */
+.shell {
   position: relative; z-index: 1;
+  height: 100dvh;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.scroll {
+  flex: 1 1 auto; min-height: 0;
+  overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+.app {
   max-width: 540px; margin: 0 auto;
-  padding: 0 var(--pad) calc(var(--nav-h) + max(var(--sab), 12px) + 90px);
+  padding: 0 var(--pad) 26px;
 }
 
 .page { display: grid; gap: var(--gap); animation: pageIn 0.44s var(--spring) both; }
@@ -115,7 +135,7 @@ button { cursor: pointer; border: none; background: none; padding: 0; }
   position: sticky; top: 0; z-index: 30;
   display: flex; align-items: center; gap: 12px;
   margin: 0 calc(var(--pad) * -1) 4px;
-  padding: calc(var(--sat) + 12px) var(--pad) 13px;
+  padding: calc(var(--sat) + 14px) var(--pad) 13px;
   background: linear-gradient(180deg, rgba(5, 5, 6, 0.94) 62%, rgba(5, 5, 6, 0));
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
 }
@@ -523,12 +543,15 @@ input[type='date']::-webkit-calendar-picker-indicator { filter: invert(1); opaci
 
 /* ============================================================ NAV + FAB */
 .nav-wrap {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
-  padding: 14px var(--pad) calc(var(--vv-inset, 0px) + max(var(--sab), 12px));
-  display: flex; justify-content: center; pointer-events: none;
+  flex: 0 0 auto;
+  position: relative; z-index: 40;
+  padding: 10px var(--pad) max(var(--sab), 10px);
+  display: flex; justify-content: center;
+  background: linear-gradient(180deg, transparent, rgba(5, 5, 6, 0.92) 42%);
   transition: transform 0.28s var(--ease), opacity 0.2s var(--ease);
-  background: linear-gradient(180deg, transparent, rgba(5, 5, 6, 0.9) 46%);
 }
+.nav-wrap.hidden-kb { display: none; }
+
 .nav {
   pointer-events: auto; position: relative;
   width: auto; max-width: 100%;
@@ -557,9 +580,9 @@ input[type='date']::-webkit-calendar-picker-indicator { filter: invert(1); opaci
 .nav-wrap.hidden-kb { transform: translateY(140%); opacity: 0; pointer-events: none; }
 
 .fab {
-  position: fixed; z-index: 45;
+  position: absolute; z-index: 45;
   right: max(var(--pad), calc(50% - 270px + var(--pad)));
-  bottom: calc(var(--vv-inset, 0px) + var(--nav-h) + max(var(--sab), 12px) + 28px);
+  bottom: calc(var(--nav-h) + max(var(--sab), 10px) + 22px);
   width: 54px; height: 54px; border-radius: 18px;
   display: grid; place-items: center;
   background: linear-gradient(180deg, #fbfbfd, #d8d8de); color: #0a0a0c;
@@ -609,8 +632,8 @@ input[type='date']::-webkit-calendar-picker-indicator { filter: invert(1); opaci
 .empty p { margin: 0 auto; font-size: 13px; max-width: 250px; line-height: 1.55; }
 
 .toast {
-  position: fixed; left: 50%; z-index: 90;
-  bottom: calc(var(--vv-inset, 0px) + var(--nav-h) + max(var(--sab), 12px) + 28px);
+  position: absolute; left: 50%; z-index: 90;
+  bottom: calc(var(--nav-h) + max(var(--sab), 10px) + 22px);
   transform: translateX(-50%);
   display: flex; align-items: center; gap: 9px;
   max-width: calc(100% - 32px);
@@ -625,9 +648,13 @@ input[type='date']::-webkit-calendar-picker-indicator { filter: invert(1); opaci
 
 /* ============================================================ AUTH */
 .auth {
-  position: relative; z-index: 1; min-height: 100dvh;
-  display: grid; place-items: center;
-  padding: calc(var(--sat) + 26px) 22px calc(var(--sab) + 26px);
+  /* body no longer scrolls, so this screen owns its own scrolling —
+     otherwise a short viewport (or an open keyboard) clips the form */
+  position: relative; z-index: 1;
+  height: 100dvh;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  display: flex; align-items: center; justify-content: center;
+  padding: calc(var(--sat) + 28px) 22px calc(var(--sab) + 28px);
 }
 .auth-card { width: 100%; max-width: 380px; animation: authIn 0.6s var(--spring) both; }
 @keyframes authIn { from { opacity: 0; transform: translateY(18px) scale(0.98); } to { opacity: 1; transform: none; } }

@@ -14,6 +14,8 @@ export function useCardMotion({ depth = 16, tilt = 7 } = {}) {
     if (!el || reduced()) return
 
     const art = () => el.querySelectorAll('[data-parallax]')
+    // the document no longer scrolls — find the pane that does
+    const scroller = el.closest('.scroll') || window
     let raf = 0
     let tx = 0, ty = 0
 
@@ -22,9 +24,13 @@ export function useCardMotion({ depth = 16, tilt = 7 } = {}) {
       cancelAnimationFrame(raf)
       raf = requestAnimationFrame(() => {
         const b = el.getBoundingClientRect()
-        if (b.bottom < -80 || b.top > window.innerHeight + 80) return
+        const view = scroller === window
+          ? { top: 0, height: window.innerHeight }
+          : scroller.getBoundingClientRect()
+        if (b.bottom < view.top - 80 || b.top > view.top + view.height + 80) return
         // -1 above the fold .. +1 below it
-        const p = (b.top + b.height / 2 - window.innerHeight / 2) / (window.innerHeight / 2)
+        const mid = view.top + view.height / 2
+        const p = (b.top + b.height / 2 - mid) / (view.height / 2)
         art().forEach((layer, i) => {
           const k = depth * (i === 0 ? 1 : 0.55)
           layer.style.transform = `translate3d(0, ${(-p * k).toFixed(2)}px, 0) scale(1.12)`
@@ -48,7 +54,7 @@ export function useCardMotion({ depth = 16, tilt = 7 } = {}) {
     }
 
     onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
+    scroller.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onScroll)
     const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches
     if (fine) {
@@ -57,7 +63,7 @@ export function useCardMotion({ depth = 16, tilt = 7 } = {}) {
     }
     return () => {
       cancelAnimationFrame(raf)
-      window.removeEventListener('scroll', onScroll)
+      scroller.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onScroll)
       el.removeEventListener('pointermove', onMove)
       el.removeEventListener('pointerleave', onLeave)

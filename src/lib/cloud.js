@@ -28,8 +28,15 @@ export const cloud = {
 /** Is a backend wired up at all? `npm run dev` without functions has none. */
 export async function probe() {
   try {
-    const res = await fetch('/api/auth?action=me', { credentials: 'same-origin' })
+    const res = await fetch('/api/auth?action=me', {
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' },
+    })
     if (res.status === 503) return false      // deployed, but no database bound
+    // A static dev server answers /api/* with the SPA shell at 200 — that is
+    // not a backend, so insist on an actual JSON reply.
+    const type = res.headers.get('content-type') || ''
+    if (!type.includes('application/json')) return false
     return res.ok
   } catch {
     return false

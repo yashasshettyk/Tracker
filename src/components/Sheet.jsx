@@ -16,12 +16,13 @@ export default function Sheet({ onClose, title, sub, children }) {
   }, [onClose])
 
   useEffect(() => {
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    const pane = document.querySelector('.scroll')
+    const prev = pane?.style.overflowY
+    if (pane) pane.style.overflowY = 'hidden'
     const onKey = (e) => e.key === 'Escape' && close()
     window.addEventListener('keydown', onKey)
     return () => {
-      document.body.style.overflow = prev
+      if (pane) pane.style.overflowY = prev || 'auto'
       window.removeEventListener('keydown', onKey)
     }
   }, [close])

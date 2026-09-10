@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useApp } from './store.jsx'
 import Login from './components/Login.jsx'
 import Dashboard from './components/Dashboard.jsx'
@@ -32,7 +32,8 @@ export default function App() {
   const [entrySheet, setEntrySheet] = useState(null) // { entry } | { kind }
   const [repaySheet, setRepaySheet] = useState(null) // { entryId } | true
 
-  useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }) }, [tab])
+  const scrollRef = useRef(null)
+  useEffect(() => { scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' }) }, [tab])
 
   if (!authed) return <Login />
 
@@ -41,8 +42,9 @@ export default function App() {
   const fabKind = tab === 'casual' ? 'casual' : 'education'
 
   return (
-    <>
-      <div className="app">
+    <div className="shell">
+      <div className="scroll" ref={scrollRef}>
+        <div className="app">
         <header className="hdr">
           <div className="hdr-mark">{state.settings.initial || 'B'}</div>
           <div>
@@ -62,7 +64,7 @@ export default function App() {
           </div>
         </header>
 
-        <main key={tab}>
+          <main key={tab}>
           {tab === 'home' && (
             <Dashboard
               go={setTab}
@@ -82,7 +84,8 @@ export default function App() {
           )}
           {tab === 'stats' && <StatsView />}
           {tab === 'settings' && <Settings />}
-        </main>
+          </main>
+        </div>
       </div>
 
       {tab !== 'settings' && !keyboard && (
@@ -135,6 +138,6 @@ export default function App() {
           <Icon name={toast.icon} size={17} weight="duotone" /> {toast.msg}
         </div>
       )}
-    </>
+    </div>
   )
 }
