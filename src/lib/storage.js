@@ -34,6 +34,20 @@ export const DEFAULT_CATEGORIES = [
   { id: 'c_uniform', name: 'Uniform & Kit', icon: 'shirt', tone: 'azure', kind: 'education', builtin: true },
   { id: 'c_mess', name: 'Mess / Food', icon: 'food', tone: 'sage', kind: 'education', builtin: true },
   { id: 'c_internet', name: 'Internet & Mobile', icon: 'wifi', tone: 'sky', kind: 'education', builtin: true },
+  { id: 'c_petrol', name: 'Petrol / Fuel', icon: 'fuel', tone: 'amber', kind: 'education', builtin: true },
+  { id: 'c_print', name: 'Printing & Xerox', icon: 'print', tone: 'azure', kind: 'education', builtin: true },
+  { id: 'c_assign', name: 'Assignments', icon: 'assignment', tone: 'periwinkle', kind: 'education', builtin: true },
+  { id: 'c_cert', name: 'Certificates & Marks Card', icon: 'certificate', tone: 'lavender', kind: 'both', builtin: true },
+  { id: 'c_admission', name: 'Admission Fee', icon: 'rent', tone: 'orchid', kind: 'education', builtin: true },
+  { id: 'c_library', name: 'Library', icon: 'library', tone: 'sky', kind: 'education', builtin: true },
+  { id: 'c_sports', name: 'Sports & Activities', icon: 'sports', tone: 'sage', kind: 'education', builtin: true },
+  { id: 'c_seminar', name: 'Workshop / Seminar', icon: 'seminar', tone: 'aqua', kind: 'education', builtin: true },
+  { id: 'c_bag', name: 'Bag & Accessories', icon: 'backpack', tone: 'champagne', kind: 'education', builtin: true },
+  { id: 'c_idcard', name: 'ID & Documents', icon: 'idcard', tone: 'pewter', kind: 'both', builtin: true },
+  { id: 'c_fieldtrip', name: 'Field Trip', icon: 'fieldtrip', tone: 'mint', kind: 'education', builtin: true },
+  { id: 'c_software', name: 'Software & Subscription', icon: 'software', tone: 'orchid', kind: 'education', builtin: true },
+  { id: 'c_instruments', name: 'Instruments & Calculator', icon: 'calculator', tone: 'azure', kind: 'education', builtin: true },
+  { id: 'c_lab', name: 'Lab & Practicals', icon: 'lab', tone: 'aqua', kind: 'education', builtin: true },
   { id: 'c_edu_other', name: 'Other (Education)', icon: 'backpack', tone: 'pewter', kind: 'education', builtin: true },
   // casual / returnable
   { id: 'c_cash', name: 'Cash Loan', icon: 'cash', tone: 'champagne', kind: 'casual', builtin: true },
@@ -48,6 +62,18 @@ export const DEFAULT_CATEGORIES = [
   { id: 'c_friends', name: 'Friends / Party', icon: 'users', tone: 'amber', kind: 'casual', builtin: true },
   { id: 'c_cas_other', name: 'Other (Casual)', icon: 'sparkle', tone: 'pewter', kind: 'casual', builtin: true },
 ]
+
+/**
+ * A saved ledger carries its own snapshot of categories, so built-ins added in
+ * a later release would never show up. Merge any missing ones back in, keeping
+ * the user's own edits and custom categories untouched.
+ */
+export function mergeCategories(saved) {
+  if (!saved?.length) return DEFAULT_CATEGORIES
+  const have = new Set(saved.map((c) => c.id))
+  const missing = DEFAULT_CATEGORIES.filter((c) => !have.has(c.id))
+  return missing.length ? [...saved, ...missing] : saved
+}
 
 export const emptyState = () => ({
   version: 1,
@@ -68,7 +94,7 @@ export function loadState() {
       ...base,
       ...parsed,
       settings: { ...base.settings, ...(parsed.settings || {}) },
-      categories: parsed.categories?.length ? parsed.categories : base.categories,
+      categories: mergeCategories(parsed.categories),
       entries: parsed.entries || [],
       repayments: parsed.repayments || [],
     }
@@ -98,7 +124,7 @@ export function loadCache(userId) {
       ...base,
       ...doc,
       settings: { ...base.settings, ...(doc.settings || {}) },
-      categories: doc.categories?.length ? doc.categories : base.categories,
+      categories: mergeCategories(doc.categories),
       entries: doc.entries || [],
       repayments: doc.repayments || [],
     }

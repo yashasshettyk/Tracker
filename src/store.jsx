@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import {
   loadState, saveState, uid, hashPin, getSession, setSession, emptyState,
-  loadCache, saveCache, clearCache,
+  loadCache, saveCache, clearCache, mergeCategories,
 } from './lib/storage.js'
 import { allocateFIFO } from './lib/stats.js'
 import { cloud, probe } from './lib/cloud.js'
@@ -60,8 +60,9 @@ export function AppProvider({ children }) {
         const remote = await cloud.getDoc()
         if (!alive) return
         if (remote.ok && remote.data.doc && Object.keys(remote.data.doc).length) {
-          setState((s) => ({ ...s, ...remote.data.doc }))
-          saveCache(me.data.user.id, remote.data.doc)
+          const doc = { ...remote.data.doc, categories: mergeCategories(remote.data.doc.categories) }
+          setState((s) => ({ ...s, ...doc }))
+          saveCache(me.data.user.id, doc)
         }
         hydrated.current = true
       }
@@ -138,8 +139,9 @@ export function AppProvider({ children }) {
       // pull this account's ledger — this is what makes a new device "just work"
       const remote = await cloud.getDoc()
       if (remote.ok && remote.data.doc && Object.keys(remote.data.doc).length) {
-        setState((s) => ({ ...s, ...remote.data.doc }))
-        saveCache(res.data.user.id, remote.data.doc)
+        const doc = { ...remote.data.doc, categories: mergeCategories(remote.data.doc.categories) }
+        setState((s) => ({ ...s, ...doc }))
+        saveCache(res.data.user.id, doc)
       } else {
         setState(() => ({ ...emptyState(), auth: null }))
       }

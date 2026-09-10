@@ -9,6 +9,9 @@ import {
   Car, AirplaneTilt, Barbell, GameController, MusicNotes, Camera, PawPrint,
   Wrench, Briefcase, Ticket, Globe, CreditCard, Tag, Heart, Star, Lightning,
   ShieldCheck, PiggyBank, Baby, Bed, Broom, Buildings,
+  Printer, NotePencil, Certificate, Books, SoccerBall, IdentificationCard,
+  MapTrifold, Calculator, CloudArrowDown, PresentationChart, Microscope,
+  Ruler, Bandaids, Scissors, Toolbox, Hammer,
 } from '@phosphor-icons/react'
 
 export const GLYPHS = {
@@ -23,6 +26,11 @@ export const GLYPHS = {
   card: CreditCard, tag: Tag, heart: Heart, star: Star, bolt: Lightning,
   shield: ShieldCheck, savings: PiggyBank, family: Baby, hostel: Bed,
   chores: Broom, rent: Buildings,
+  print: Printer, assignment: NotePencil, certificate: Certificate, library: Books,
+  sports: SoccerBall, idcard: IdentificationCard, fieldtrip: MapTrifold,
+  calculator: Calculator, software: CloudArrowDown, seminar: PresentationChart,
+  lab: Microscope, ruler: Ruler, firstaid: Bandaids, craft: Scissors,
+  toolbox: Toolbox, repair: Hammer,
 }
 
 /** Curated tones — readable on the near-black ground, distinct from each other. */
